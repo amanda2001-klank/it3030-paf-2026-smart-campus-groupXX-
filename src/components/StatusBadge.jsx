@@ -5,7 +5,7 @@ const StatusBadge = ({ status }) => {
     PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: '⏳' },
     APPROVED: { bg: 'bg-green-100', text: 'text-green-800', icon: '✅' },
     REJECTED: { bg: 'bg-red-100', text: 'text-red-800', icon: '❌' },
-    CANCELLED: { bg: 'bg-gray-100', text: 'text-gray-800', icon: '🚫' },
+    CANCELLED: { bg: 'bg-gray-100', text: 'text-gray-600', icon: '🚫' },
   };
 
   const config = statusConfig[status] || statusConfig.PENDING;

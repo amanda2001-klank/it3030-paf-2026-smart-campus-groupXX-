@@ -4,11 +4,15 @@
 
 import React, { useState } from 'react';
 import StatusBadge from '../components/StatusBadge';
+import BookingTable from '../components/booking/BookingTable';
+import CreateBookingModal from '../components/booking/CreateBookingModal';
 
 const BookingManagement = () => {
   // Track active filter tab
   const [activeTab, setActiveTab] = useState('all');
   const [activeMainTab, setActiveMainTab] = useState('requests');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const isAdmin = true; // Hardcoded for now
 
   // Main navigation tabs
   const mainTabs = [
@@ -25,47 +29,35 @@ const BookingManagement = () => {
     { id: 'pending', label: 'Pending', icon: '⏳' },
   ];
 
-  // Sample booking data
-  const bookings = [
+
+  // Mock bookings data
+  const mockBookings = [
     {
-      id: 1,
-      resource: 'Conference Room A',
-      resourceIcon: '🏢',
-      requestedBy: 'John Doe',
-      avatar: '👤',
-      dateTime: 'Mar 29, 2026 | 10:00 AM',
-      purpose: 'Project Planning Meeting',
+      id: '1',
+      resourceName: 'Auditorium A',
+      requestedByName: 'Dr. Aruna Perera',
+      startTime: '2023-10-24T09:00',
+      endTime: '2023-10-24T11:30',
+      purpose: 'Guest Lecture',
       status: 'PENDING',
     },
     {
-      id: 2,
-      resource: 'Auditorium',
-      resourceIcon: '🎤',
-      requestedBy: 'Sarah Khan',
-      avatar: '👩',
-      dateTime: 'Mar 29, 2026 | 2:00 PM',
-      purpose: 'Seminar - Cloud Computing',
+      id: '2',
+      resourceName: 'Advanced Physics Lab',
+      requestedByName: 'Samantha Silva',
+      startTime: '2023-10-24T14:00',
+      endTime: '2023-10-24T16:00',
+      purpose: 'Senior Research',
       status: 'APPROVED',
     },
     {
-      id: 3,
-      resource: 'Lab B - Computer',
-      resourceIcon: '💻',
-      requestedBy: 'Mike Ahmed',
-      avatar: '👨',
-      dateTime: 'Mar 28, 2026 | 3:30 PM',
-      purpose: 'AI/ML Practical Session',
-      status: 'APPROVED',
-    },
-    {
-      id: 4,
-      resource: 'Sports Ground',
-      resourceIcon: '⚽',
-      requestedBy: 'Lisa Brown',
-      avatar: '👩',
-      dateTime: 'Mar 27, 2026 | 4:00 PM',
-      purpose: 'Inter-departmental Sports Event',
-      status: 'REJECTED',
+      id: '3',
+      resourceName: 'Computer Lab 04',
+      requestedByName: 'Kasun Perera',
+      startTime: '2023-10-26T08:00',
+      endTime: '2023-10-26T10:00',
+      purpose: 'Software Training',
+      status: 'CANCELLED',
     },
   ];
 
@@ -85,6 +77,17 @@ const BookingManagement = () => {
     'Actions',
   ];
 
+  // Handle modal close
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  // Handle booking form submission
+  const handleBookingSubmit = (formData) => {
+    console.log('New booking submitted:', formData);
+    // This will be replaced with API call later
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top Header */}
@@ -93,6 +96,7 @@ const BookingManagement = () => {
           <h1 className="text-2xl font-bold text-gray-900">Smart Campus Hub</h1>
           <button
             type="button"
+            onClick={() => setIsModalOpen(true)}
             className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
           >
             + New Booking
@@ -141,77 +145,13 @@ const BookingManagement = () => {
         </div>
 
         {/* Bookings Table */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-8">
-          <table className="w-full">
-            {/* Table Header */}
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                {tableHeaders.map((header) => (
-                  <th
-                    key={header}
-                    className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide"
-                  >
-                    {header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-
-            {/* Table Body */}
-            <tbody className="divide-y divide-gray-200">
-              {bookings.map((booking) => (
-                <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
-                  {/* Resource Name */}
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xl">{booking.resourceIcon}</span>
-                      <span className="text-sm font-medium text-gray-900">
-                        {booking.resource}
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Requested By */}
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 rounded-full bg-blue-200 flex items-center justify-center text-xs">
-                        {booking.avatar}
-                      </div>
-                      <span className="text-sm text-gray-900">{booking.requestedBy}</span>
-                    </div>
-                  </td>
-
-                  {/* Date & Time */}
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {booking.dateTime}
-                  </td>
-
-                  {/* Purpose */}
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {booking.purpose}
-                  </td>
-
-                  {/* Status */}
-                  <td className="px-6 py-4">
-                    <StatusBadge status={booking.status} />
-                  </td>
-
-                  {/* Actions */}
-                  <td className="px-6 py-4">
-                    <div className="flex space-x-2">
-                      <button className="px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded transition-colors">
-                        View
-                      </button>
-                      <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded transition-colors">
-                        More
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <BookingTable
+          bookings={mockBookings}
+          onApprove={(id) => console.log('Approve booking:', id)}
+          onReject={(id) => console.log('Reject booking:', id)}
+          onCancel={(id) => console.log('Cancel booking:', id)}
+          isAdmin={isAdmin}
+        />
 
         {/* Two Column Section */}
         <div className="grid grid-cols-2 gap-8">
@@ -275,6 +215,13 @@ const BookingManagement = () => {
           </div>
         </div>
       </div>
+
+      {/* Create Booking Modal */}
+      <CreateBookingModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSubmit={handleBookingSubmit}
+      />
     </div>
   );
 };
