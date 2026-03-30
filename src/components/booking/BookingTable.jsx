@@ -26,6 +26,7 @@ const BookingTable = ({ bookings, onApprove, onReject, onCancel, isAdmin }) => {
 
   // Render action buttons based on status and isAdmin flag
   const renderActions = (booking) => {
+    // Admin actions for PENDING bookings
     if (booking.status === 'PENDING' && isAdmin) {
       return (
         <div className="flex space-x-2">
@@ -45,18 +46,21 @@ const BookingTable = ({ bookings, onApprove, onReject, onCancel, isAdmin }) => {
       );
     }
     
-    if (booking.status === 'APPROVED' && !isAdmin) {
+    // User can cancel their own APPROVED bookings
+    if (booking.status === 'APPROVED') {
       return (
         <button
           onClick={() => onCancel(booking.id)}
-          className="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded transition-colors"
+          className="px-3 py-1 text-xs font-medium text-white bg-orange-600 hover:bg-orange-700 rounded transition-colors"
         >
           Cancel
         </button>
       );
     }
     
-    return null;
+    return (
+      <span className="text-xs text-gray-500">No actions available</span>
+    );
   };
 
   return (

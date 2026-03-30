@@ -6,6 +6,22 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
+// Add custom headers for user context (team will replace with OAuth2 later)
+apiClient.interceptors.request.use(
+  (config) => {
+    const userId = localStorage.getItem('userId') || 'test-user-123';
+    const userName = localStorage.getItem('userName') || 'Test User';
+    
+    config.headers['X-User-Id'] = userId;
+    config.headers['X-User-Name'] = userName;
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // ============================================================================
 // BOOKING SERVICE - API calls for resource booking management
 // ============================================================================

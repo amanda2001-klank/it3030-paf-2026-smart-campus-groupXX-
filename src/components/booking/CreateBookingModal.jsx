@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 const CreateBookingModal = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
+    resourceId: '',
     resourceName: '',
     date: '',
     startTime: '',
@@ -11,6 +12,7 @@ const CreateBookingModal = ({ isOpen, onClose, onSubmit }) => {
   });
 
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Validate form fields
   const validateForm = () => {
@@ -53,22 +55,27 @@ const CreateBookingModal = ({ isOpen, onClose, onSubmit }) => {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (validateForm()) {
-      onSubmit(formData);
-      // Reset form
-      setFormData({
-        resourceName: '',
-        date: '',
-        startTime: '',
-        endTime: '',
-        purpose: '',
-        expectedAttendees: '',
-      });
-      setErrors({});
-      onClose();
+      setIsSubmitting(true);
+      try {
+        await onSubmit(formData);
+        // Reset form
+        setFormData({
+          resourceId: '',
+          resourceName: '',
+          date: '',
+          startTime: '',
+          endTime: '',
+          purpose: '',
+          expectedAttendees: '',
+        });
+        setErrors({});
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -91,6 +98,7 @@ const CreateBookingModal = ({ isOpen, onClose, onSubmit }) => {
   // Handle modal close
   const handleCancel = () => {
     setFormData({
+      resourceId: '',
       resourceName: '',
       date: '',
       startTime: '',
@@ -231,16 +239,25 @@ const CreateBookingModal = ({ isOpen, onClose, onSubmit }) => {
             <button
               type="button"
               onClick={handleCancel}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              disabled={isSubmitting}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
               onClick={handleSubmit}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              disabled={isSubmitting}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              Submit
+              {isSubmitting ? (
+                <>
+                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  Submitting...
+                </>
+              ) : (
+                'Submit'
+              )}
             </button>
           </div>
         </div>
