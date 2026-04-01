@@ -20,8 +20,9 @@ public class Booking {
 
     private String resourceName;
 
+    // user id
     @NotBlank(message = "Requested by ID is required")
-    private String requestedById;
+    private String requestedById; 
 
     private String requestedByName;
 
