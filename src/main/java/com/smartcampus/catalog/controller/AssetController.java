@@ -9,10 +9,14 @@ import com.smartcampus.catalog.security.MockUserRole;
 import com.smartcampus.catalog.service.AssetService;
 import com.smartcampus.catalog.service.MockAccessService;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @Validated
@@ -27,14 +31,15 @@ public class AssetController {
         this.mockAccessService = mockAccessService;
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AssetResponse> createAsset(
-            @Valid @RequestBody AssetRequest request,
+            @Valid @ModelAttribute AssetRequest request,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
             @RequestHeader(value = "X-User-Id", required = false) String userId,
             @RequestHeader(value = "X-User-Name", required = false) String userName,
             @RequestHeader(value = "X-User-Role", required = false) String userRole) {
         MockUserContext currentUser = requireManagerAccess(userId, userName, userRole);
-        return ResponseEntity.status(HttpStatus.CREATED).body(assetService.createAsset(request, currentUser));
+        return ResponseEntity.status(HttpStatus.CREATED).body(assetService.createAsset(request, currentUser, files));
     }
 
     @GetMapping
@@ -47,15 +52,17 @@ public class AssetController {
         return ResponseEntity.ok(assetService.getAssetById(id));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AssetResponse> updateAsset(
             @PathVariable String id,
-            @Valid @RequestBody AssetRequest request,
+            @Valid @ModelAttribute AssetRequest request,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
+            @RequestParam(value = "removeMediaIds", required = false) String removeMediaIds,
             @RequestHeader(value = "X-User-Id", required = false) String userId,
             @RequestHeader(value = "X-User-Name", required = false) String userName,
             @RequestHeader(value = "X-User-Role", required = false) String userRole) {
-        requireManagerAccess(userId, userName, userRole);
-        return ResponseEntity.ok(assetService.updateAsset(id, request));
+        MockUserContext currentUser = requireManagerAccess(userId, userName, userRole);
+        return ResponseEntity.ok(assetService.updateAsset(id, request, removeMediaIds, currentUser, files));
     }
 
     @DeleteMapping("/{id}")
