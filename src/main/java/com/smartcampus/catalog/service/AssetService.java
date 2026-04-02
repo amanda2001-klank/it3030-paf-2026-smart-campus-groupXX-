@@ -6,6 +6,7 @@ import com.smartcampus.booking.exception.ResourceNotFoundException;
 import com.smartcampus.catalog.dto.AssetRequest;
 import com.smartcampus.catalog.dto.AssetResponse;
 import com.smartcampus.catalog.dto.AssetSearchRequest;
+import com.smartcampus.catalog.dto.AssetListRequest;
 import com.smartcampus.catalog.dto.PageResponse;
 import com.smartcampus.catalog.model.Asset;
 import com.smartcampus.catalog.model.AssetMedia;
@@ -92,6 +93,21 @@ public class AssetService {
             assetRepository.deleteById(savedAsset.getId());
             throw ex;
         }
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<AssetResponse> getAllAssets(AssetListRequest request) {
+        String sortBy = validateSortField(request.getSortBy());
+        Sort.Direction direction = resolveSortDirection(request.getSortDir());
+
+        Query query = new Query();
+        long total = mongoTemplate.count(query, Asset.class);
+
+        query.with(PageRequest.of(request.getPage(), request.getSize(), Sort.by(direction, sortBy)));
+        List<Asset> assets = mongoTemplate.find(query, Asset.class);
+        List<AssetResponse> content = enrichAssets(assets);
+
+        return buildPageResponse(content, request.getPage(), request.getSize(), total, sortBy, direction);
     }
 
     @Transactional(readOnly = true)
