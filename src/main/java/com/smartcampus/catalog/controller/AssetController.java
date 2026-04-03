@@ -44,17 +44,32 @@ public class AssetController {
     }
 
     @GetMapping
-    public ResponseEntity<PageResponse<AssetResponse>> searchAssets(@Valid @ModelAttribute AssetSearchRequest request) {
+    public ResponseEntity<PageResponse<AssetResponse>> searchAssets(
+            @Valid @ModelAttribute AssetSearchRequest request,
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = "X-User-Name", required = false) String userName,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        requireManagerAccess(userId, userName, userRole);
         return ResponseEntity.ok(assetService.searchAssets(request));
     }
 
     @GetMapping("/all")
-    public ResponseEntity<PageResponse<AssetResponse>> getAllAssets(@Valid @ModelAttribute AssetListRequest request) {
+    public ResponseEntity<PageResponse<AssetResponse>> getAllAssets(
+            @Valid @ModelAttribute AssetListRequest request,
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = "X-User-Name", required = false) String userName,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        requireManagerAccess(userId, userName, userRole);
         return ResponseEntity.ok(assetService.getAllAssets(request));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AssetResponse> getAssetById(@PathVariable String id) {
+    public ResponseEntity<AssetResponse> getAssetById(
+            @PathVariable String id,
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = "X-User-Name", required = false) String userName,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        requireManagerAccess(userId, userName, userRole);
         return ResponseEntity.ok(assetService.getAssetById(id));
     }
 
