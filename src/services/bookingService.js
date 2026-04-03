@@ -1,32 +1,8 @@
-import axios from 'axios';
+import apiClient from './apiClient';
 
 // ============================================================================
 // BOOKING SERVICE - Axios instance and API calls
 // ============================================================================
-
-// Create Axios instance with base configuration
-const apiClient = axios.create({
-  baseURL: 'http://localhost:8080',
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor to add user context headers
-// Team will replace with OAuth2 authentication in future
-apiClient.interceptors.request.use(
-  (config) => {
-    const userId = localStorage.getItem('userId') || 'test-user-123';
-    const userRole = localStorage.getItem('userRole') || 'USER';
-    
-    config.headers['X-User-Id'] = userId;
-    config.headers['X-User-Role'] = userRole;
-    
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 // ============================================================================
 // USER-SIDE BOOKING FUNCTIONS
