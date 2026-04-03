@@ -125,11 +125,7 @@ public class AssetService {
 
         String searchQuery = IdValidationUtils.trimToNull(request.getQuery());
         if (searchQuery != null) {
-            filters.add(new Criteria().orOperator(
-                    containsIgnoreCase("assetCode", searchQuery),
-                    containsIgnoreCase("assetName", searchQuery),
-                    containsIgnoreCase("description", searchQuery)
-            ));
+            filters.add(buildAssetSearchCriteria(searchQuery));
         }
 
         String assetTypeId = IdValidationUtils.optionalObjectId(request.getAssetTypeId(), "Asset type ID");
@@ -364,6 +360,69 @@ public class AssetService {
                 .stream()
                 .map(Location::getId)
                 .collect(Collectors.toSet());
+    }
+
+    private Criteria buildAssetSearchCriteria(String searchQuery) {
+        List<Criteria> searchCriteria = new ArrayList<>();
+        searchCriteria.add(containsIgnoreCase("assetCode", searchQuery));
+        searchCriteria.add(containsIgnoreCase("assetName", searchQuery));
+        searchCriteria.add(containsIgnoreCase("description", searchQuery));
+
+        Set<String> matchingAssetTypeIds = resolveAssetTypeIdsBySearch(searchQuery);
+        if (!matchingAssetTypeIds.isEmpty()) {
+            searchCriteria.add(Criteria.where("assetTypeId").in(matchingAssetTypeIds));
+        }
+
+        Set<String> matchingLocationIds = resolveLocationIdsBySearch(searchQuery);
+        if (!matchingLocationIds.isEmpty()) {
+            searchCriteria.add(Criteria.where("locationId").in(matchingLocationIds));
+        }
+
+        Integer capacity = tryParseCapacity(searchQuery);
+        if (capacity != null) {
+            searchCriteria.add(Criteria.where("capacity").is(capacity));
+        }
+
+        return new Criteria().orOperator(searchCriteria.toArray(new Criteria[0]));
+    }
+
+    private Set<String> resolveAssetTypeIdsBySearch(String searchQuery) {
+        Query assetTypeQuery = new Query(new Criteria().orOperator(
+                containsIgnoreCase("code", searchQuery),
+                containsIgnoreCase("name", searchQuery)
+        ));
+
+        return mongoTemplate.find(assetTypeQuery, AssetType.class)
+                .stream()
+                .map(AssetType::getId)
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> resolveLocationIdsBySearch(String searchQuery) {
+        Query locationQuery = new Query(new Criteria().orOperator(
+                containsIgnoreCase("building", searchQuery),
+                containsIgnoreCase("floor", searchQuery),
+                containsIgnoreCase("roomCode", searchQuery),
+                containsIgnoreCase("locationName", searchQuery),
+                containsIgnoreCase("address", searchQuery)
+        ));
+
+        return mongoTemplate.find(locationQuery, Location.class)
+                .stream()
+                .map(Location::getId)
+                .collect(Collectors.toSet());
+    }
+
+    private Integer tryParseCapacity(String searchQuery) {
+        if (!searchQuery.matches("\\d+")) {
+            return null;
+        }
+
+        try {
+            return Integer.parseInt(searchQuery);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 
     private AssetStatus resolveStatus(String statusValue) {
