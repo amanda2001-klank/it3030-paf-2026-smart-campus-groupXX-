@@ -38,12 +38,22 @@ public class AssetTypeController {
     }
 
     @GetMapping
-    public ResponseEntity<PageResponse<AssetTypeResponse>> searchAssetTypes(@Valid @ModelAttribute AssetTypeSearchRequest request) {
+    public ResponseEntity<PageResponse<AssetTypeResponse>> searchAssetTypes(
+            @Valid @ModelAttribute AssetTypeSearchRequest request,
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = "X-User-Name", required = false) String userName,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        requireManagerAccess(userId, userName, userRole);
         return ResponseEntity.ok(assetTypeService.searchAssetTypes(request));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AssetTypeResponse> getAssetTypeById(@PathVariable String id) {
+    public ResponseEntity<AssetTypeResponse> getAssetTypeById(
+            @PathVariable String id,
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = "X-User-Name", required = false) String userName,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        requireManagerAccess(userId, userName, userRole);
         return ResponseEntity.ok(assetTypeService.getAssetTypeById(id));
     }
 
