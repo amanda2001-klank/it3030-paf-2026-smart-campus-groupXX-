@@ -7,6 +7,7 @@ import com.smartcampus.catalog.dto.AssetRequest;
 import com.smartcampus.catalog.dto.AssetResponse;
 import com.smartcampus.catalog.dto.AssetSearchRequest;
 import com.smartcampus.catalog.dto.AssetListRequest;
+import com.smartcampus.catalog.dto.AssetMediaContent;
 import com.smartcampus.catalog.dto.PageResponse;
 import com.smartcampus.catalog.model.Asset;
 import com.smartcampus.catalog.model.AssetMedia;
@@ -193,6 +194,13 @@ public class AssetService {
         Location location = getLocationById(asset.getLocationId());
         List<AssetMedia> media = assetMediaStorageService.getMediaByAssetId(asset.getId());
         return AssetResponse.fromAsset(asset, assetType, location, media);
+    }
+
+    @Transactional(readOnly = true)
+    public AssetMediaContent getAssetMediaContent(String assetId, String mediaId) {
+        getAssetEntity(assetId);
+        AssetMedia media = assetMediaStorageService.getRequiredMedia(assetId, mediaId);
+        return new AssetMediaContent(media, assetMediaStorageService.loadMediaAsResource(media));
     }
 
     public AssetResponse updateAsset(String id, AssetRequest request, String removeMediaIds, MockUserContext currentUser,
