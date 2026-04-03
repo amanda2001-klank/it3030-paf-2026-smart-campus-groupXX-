@@ -4,19 +4,25 @@ import com.smartcampus.catalog.dto.AssetRequest;
 import com.smartcampus.catalog.dto.AssetResponse;
 import com.smartcampus.catalog.dto.AssetSearchRequest;
 import com.smartcampus.catalog.dto.AssetListRequest;
+import com.smartcampus.catalog.dto.AssetMediaContent;
 import com.smartcampus.catalog.dto.PageResponse;
 import com.smartcampus.catalog.security.MockUserContext;
 import com.smartcampus.catalog.security.MockUserRole;
 import com.smartcampus.catalog.service.AssetService;
 import com.smartcampus.catalog.service.MockAccessService;
 import jakarta.validation.Valid;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -73,6 +79,28 @@ public class AssetController {
         return ResponseEntity.ok(assetService.getAssetById(id));
     }
 
+    @GetMapping("/{assetId}/media/{mediaId}")
+    public ResponseEntity<Resource> previewAssetMedia(
+            @PathVariable String assetId,
+            @PathVariable String mediaId,
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = "X-User-Name", required = false) String userName,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        requireManagerAccess(userId, userName, userRole);
+        return buildMediaResponse(assetService.getAssetMediaContent(assetId, mediaId), false);
+    }
+
+    @GetMapping("/{assetId}/media/{mediaId}/download")
+    public ResponseEntity<Resource> downloadAssetMedia(
+            @PathVariable String assetId,
+            @PathVariable String mediaId,
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = "X-User-Name", required = false) String userName,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+        requireManagerAccess(userId, userName, userRole);
+        return buildMediaResponse(assetService.getAssetMediaContent(assetId, mediaId), true);
+    }
+
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AssetResponse> updateAsset(
             @PathVariable String id,
@@ -101,5 +129,30 @@ public class AssetController {
         MockUserContext currentUser = mockAccessService.resolveUser(userId, userName, userRole);
         mockAccessService.requireAnyRole(currentUser, MockUserRole.ADMIN, MockUserRole.ASSET_MANAGER);
         return currentUser;
+    }
+
+    private ResponseEntity<Resource> buildMediaResponse(AssetMediaContent assetMediaContent, boolean attachment) {
+        MediaType mediaType = resolveMediaType(assetMediaContent.media().getContentType(), assetMediaContent.resource());
+        ContentDisposition disposition = attachment
+                ? ContentDisposition.attachment()
+                .filename(assetMediaContent.media().getOriginalFileName(), StandardCharsets.UTF_8)
+                .build()
+                : ContentDisposition.inline()
+                .filename(assetMediaContent.media().getOriginalFileName(), StandardCharsets.UTF_8)
+                .build();
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .contentLength(assetMediaContent.media().getFileSize())
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .body(assetMediaContent.resource());
+    }
+
+    private MediaType resolveMediaType(String contentType, Resource resource) {
+        if (contentType != null && !contentType.isBlank()) {
+            return MediaType.parseMediaType(contentType);
+        }
+
+        return MediaTypeFactory.getMediaType(resource).orElse(MediaType.APPLICATION_OCTET_STREAM);
     }
 }
