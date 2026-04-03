@@ -6,11 +6,14 @@ import com.smartcampus.catalog.model.AssetMedia;
 import com.smartcampus.catalog.model.AssetMediaType;
 import com.smartcampus.catalog.repository.AssetMediaRepository;
 import com.smartcampus.catalog.util.IdValidationUtils;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.MalformedURLException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -77,6 +80,30 @@ public class AssetMediaStorageService {
         assetMediaRepository.findByAssetIdInOrderByCreatedAtAsc(assetIds)
                 .forEach(assetMedia -> result.computeIfAbsent(assetMedia.getAssetId(), ignored -> new ArrayList<>()).add(assetMedia));
         return result;
+    }
+
+    public AssetMedia getRequiredMedia(String assetId, String mediaId) {
+        String validatedAssetId = IdValidationUtils.requireValidObjectId(assetId, "Asset ID");
+        String validatedMediaId = IdValidationUtils.requireValidObjectId(mediaId, "Asset media ID");
+
+        return assetMediaRepository.findByIdAndAssetId(validatedMediaId, validatedAssetId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Asset media not found for asset id: " + validatedAssetId + " and media id: " + validatedMediaId
+                ));
+    }
+
+    public Resource loadMediaAsResource(AssetMedia assetMedia) {
+        Path filePath = resolveMediaPath(assetMedia);
+
+        try {
+            Resource resource = new UrlResource(filePath.toUri());
+            if (!resource.exists() || !resource.isReadable()) {
+                throw new ResourceNotFoundException("Stored media file is not readable for media id: " + assetMedia.getId());
+            }
+            return resource;
+        } catch (MalformedURLException ex) {
+            throw new BadRequestException("Failed to resolve stored media file path", ex);
+        }
     }
 
     public List<AssetMedia> saveMediaFiles(String assetId, List<MultipartFile> files, String uploadedById) {
@@ -264,6 +291,18 @@ public class AssetMediaStorageService {
         } catch (IOException ex) {
             throw new IllegalStateException("Failed to create upload directory: " + uploadRootPath, ex);
         }
+    }
+
+    private Path resolveMediaPath(AssetMedia assetMedia) {
+        Path projectRoot = Paths.get("").toAbsolutePath().normalize();
+        Path filePath = projectRoot.resolve(assetMedia.getRelativePath()).normalize();
+        if (!filePath.startsWith(projectRoot)) {
+            throw new BadRequestException("Invalid stored media path for media id: " + assetMedia.getId());
+        }
+        if (!Files.exists(filePath)) {
+            throw new ResourceNotFoundException("Stored media file not found for media id: " + assetMedia.getId());
+        }
+        return filePath;
     }
 
     private Path createAssetDirectory(String assetId) {
