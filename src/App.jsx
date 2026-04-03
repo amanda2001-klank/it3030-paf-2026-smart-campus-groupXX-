@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import AssetCataloguePage from './pages/AssetCataloguePage';
+import AssetDetailPage from './pages/AssetDetailPage';
 import BookingManagement from './pages/BookingManagement';
 import PlaceholderPage from './pages/PlaceholderPage';
 import { ensureMockUser } from './utils/mockAuth';
@@ -29,6 +30,7 @@ function App() {
               }
             />
             <Route path="/assets" element={<AssetCataloguePage />} />
+            <Route path="/assets/:assetId" element={<AssetDetailPage />} />
             <Route path="/bookings" element={<BookingManagement />} />
             <Route
               path="/tickets"
