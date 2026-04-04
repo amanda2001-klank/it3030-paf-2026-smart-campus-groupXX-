@@ -52,6 +52,7 @@ const AssetDetailPage = () => {
   const { assetId } = useParams();
   const [currentUser, setCurrentUser] = useState(() => ensureMockUser());
   const [asset, setAsset] = useState(null);
+  const [thumbnailState, setThumbnailState] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null);
@@ -79,6 +80,60 @@ const AssetDetailPage = () => {
       URL.revokeObjectURL(previewState.previewUrl);
     };
   }, [previewState.previewUrl]);
+
+  useEffect(() => {
+    if (!asset?.id || !asset.media?.length) {
+      setThumbnailState({});
+      return undefined;
+    }
+
+    let isActive = true;
+    const createdUrls = [];
+
+    setThumbnailState(
+      Object.fromEntries(
+        asset.media.map((media) => [media.id, { url: '', loading: true, error: false }])
+      )
+    );
+
+    const loadThumbnails = async () => {
+      await Promise.all(
+        asset.media.map(async (media) => {
+          try {
+            const response = await previewAssetMedia(asset.id, media.id);
+            const url = URL.createObjectURL(response.data);
+
+            if (!isActive) {
+              URL.revokeObjectURL(url);
+              return;
+            }
+
+            createdUrls.push(url);
+            setThumbnailState((previous) => ({
+              ...previous,
+              [media.id]: { url, loading: false, error: false },
+            }));
+          } catch (thumbnailError) {
+            if (!isActive) {
+              return;
+            }
+
+            setThumbnailState((previous) => ({
+              ...previous,
+              [media.id]: { url: '', loading: false, error: true },
+            }));
+          }
+        })
+      );
+    };
+
+    loadThumbnails();
+
+    return () => {
+      isActive = false;
+      createdUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [asset]);
 
   useEffect(() => {
     if (!hasCatalogueAccess || !assetId) {
@@ -347,28 +402,69 @@ const AssetDetailPage = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid gap-4 p-6 md:grid-cols-2">
+                <div className="grid gap-4 p-6 sm:grid-cols-2 xl:grid-cols-3">
                   {asset.media.map((media) => (
+                    (() => {
+                      const thumbnail = thumbnailState[media.id] || {
+                        url: '',
+                        loading: true,
+                        error: false,
+                      };
+
+                      return (
                     <div
                       key={media.id}
-                      className="rounded-3xl border border-gray-200 bg-gray-50 p-5 transition hover:border-blue-300 hover:bg-blue-50"
+                      className="rounded-3xl border border-gray-200 bg-gray-50 p-4 transition hover:border-blue-300 hover:bg-blue-50"
                     >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                          <span className="rounded-full bg-gray-900 px-3 py-1 text-xs font-semibold text-white">
-                            {media.mediaType}
-                          </span>
-                          <h3 className="mt-4 truncate text-base font-semibold text-gray-900">
+                      <button
+                        type="button"
+                        onClick={() => handlePreviewMedia(media)}
+                        className="block w-full text-left"
+                      >
+                        <div className="relative aspect-[5/4] overflow-hidden rounded-2xl bg-gray-900">
+                          {thumbnail.loading ? (
+                            <div className="flex h-full items-center justify-center bg-gray-100 text-sm font-medium text-gray-500">
+                              Loading thumbnail...
+                            </div>
+                          ) : thumbnail.error ? (
+                            <div className="flex h-full items-center justify-center bg-red-50 px-6 text-center text-sm font-medium text-red-700">
+                              Thumbnail unavailable
+                            </div>
+                          ) : media.mediaType === 'VIDEO' ? (
+                            <video
+                              className="h-full w-full object-cover"
+                              src={thumbnail.url}
+                              muted
+                              playsInline
+                              preload="metadata"
+                            />
+                          ) : (
+                            <img
+                              src={thumbnail.url}
+                              alt={media.originalFileName}
+                              className="h-full w-full object-cover"
+                            />
+                          )}
+
+                          <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3">
+                            <span className="rounded-full bg-gray-950/75 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
+                              {media.mediaType}
+                            </span>
+                            <span className="rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-gray-900">
+                              Click to preview
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4">
+                          <h3 className="truncate text-base font-semibold text-gray-900">
                             {media.originalFileName}
                           </h3>
-                          <p className="mt-2 text-sm text-gray-500">{formatBytes(media.fileSize)}</p>
+                          <p className="mt-1 text-sm text-gray-500">{formatBytes(media.fileSize)}</p>
                         </div>
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-semibold text-blue-700 shadow-sm">
-                          {media.mediaType === 'VIDEO' ? 'V' : 'I'}
-                        </div>
-                      </div>
+                      </button>
 
-                      <div className="mt-5 grid gap-3 text-sm text-gray-600 sm:grid-cols-2">
+                      <div className="mt-4 grid gap-3 text-sm text-gray-600 sm:grid-cols-2">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                             Uploaded
@@ -383,14 +479,7 @@ const AssetDetailPage = () => {
                         </div>
                       </div>
 
-                      <div className="mt-5 flex flex-wrap gap-3">
-                        <button
-                          type="button"
-                          onClick={() => handlePreviewMedia(media)}
-                          className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
-                        >
-                          Preview
-                        </button>
+                      <div className="mt-4 flex flex-wrap gap-3">
                         <button
                           type="button"
                           onClick={() => handleDownloadMedia(media)}
@@ -401,6 +490,8 @@ const AssetDetailPage = () => {
                         </button>
                       </div>
                     </div>
+                      );
+                    })()
                   ))}
                 </div>
               )}
