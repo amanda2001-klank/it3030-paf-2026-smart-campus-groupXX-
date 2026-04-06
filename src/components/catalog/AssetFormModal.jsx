@@ -12,6 +12,7 @@ const emptyForm = {
 };
 
 const assetStatusOptions = ['ACTIVE', 'OUT_OF_SERVICE', 'MAINTENANCE', 'INACTIVE'];
+const nonBookableStatuses = new Set(['OUT_OF_SERVICE', 'MAINTENANCE', 'INACTIVE']);
 
 const formatBytes = (bytes) => {
   if (!bytes) {
@@ -42,6 +43,7 @@ const AssetFormModal = ({
   const fileInputRef = useRef(null);
 
   const existingMedia = useMemo(() => initialData?.media || [], [initialData]);
+  const isForcedNonBookable = nonBookableStatuses.has(formData.status);
   const keptExistingMediaCount = existingMedia.filter(
     (mediaItem) => !removedMediaIds.includes(mediaItem.id)
   ).length;
@@ -82,10 +84,19 @@ const AssetFormModal = ({
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
-    setFormData((previous) => ({
-      ...previous,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    setFormData((previous) => {
+      const nextValue = type === 'checkbox' ? checked : value;
+      const nextFormData = {
+        ...previous,
+        [name]: nextValue,
+      };
+
+      if (name === 'status' && nonBookableStatuses.has(String(nextValue))) {
+        nextFormData.isBookable = false;
+      }
+
+      return nextFormData;
+    });
     setErrors((previous) => ({
       ...previous,
       [name]: '',
@@ -319,13 +330,21 @@ const AssetFormModal = ({
                   <input
                     type="checkbox"
                     name="isBookable"
-                    checked={formData.isBookable}
+                    checked={isForcedNonBookable ? false : formData.isBookable}
                     onChange={handleChange}
+                    disabled={isForcedNonBookable}
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   Bookable asset
                 </label>
               </div>
+
+              {isForcedNonBookable && (
+                <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  Assets with status OUT OF SERVICE, MAINTENANCE, or INACTIVE are always marked as
+                  not bookable.
+                </p>
+              )}
 
               {existingMedia.length > 0 && (
                 <div className="mt-5 space-y-3">
