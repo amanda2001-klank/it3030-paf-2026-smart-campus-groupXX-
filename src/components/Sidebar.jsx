@@ -8,6 +8,7 @@ const Sidebar = () => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '\u25A6', path: '/dashboard' },
     { id: 'assets', label: 'Assets', icon: '\u25A3', path: '/assets' },
+    { id: 'asset-list', label: 'Asset List', icon: '\u25A8', path: '/asset-list' },
     { id: 'bookings', label: 'Bookings', icon: '\u25A4', path: '/bookings' },
     { id: 'tickets', label: 'Incident Tickets', icon: '\u25A9', path: '/tickets' },
     { id: 'users', label: 'User Management', icon: '\u25A7', path: '/users' },
