@@ -1,9 +1,18 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { formatRoleLabel, getMockUser } from '../utils/mockAuth';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { clearAuthState, formatRoleLabel, getCurrentUser } from '../utils/auth';
 
 const Sidebar = () => {
-  const currentUser = getMockUser();
+  const navigate = useNavigate();
+  const currentUser = getCurrentUser();
+  const displayName = currentUser.userName || 'User';
+  const displayRole = formatRoleLabel(currentUser.userRole || 'USER');
+  const avatarLetter = (displayName.charAt(0) || 'U').toUpperCase();
+
+  const handleLogout = () => {
+    clearAuthState();
+    navigate('/login', { replace: true });
+  };
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '\u25A6', path: '/dashboard' },
@@ -41,16 +50,24 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      <div className="border-t border-gray-800 p-4">
+      <div className="space-y-3 border-t border-gray-800 p-4">
         <div className="flex items-center space-x-3 rounded-lg bg-gray-800 px-4 py-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-xs font-bold uppercase">
-            {currentUser.userName.charAt(0)}
+            {avatarLetter}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-white">{currentUser.userName}</p>
-            <p className="truncate text-xs text-gray-400">{formatRoleLabel(currentUser.userRole)}</p>
+            <p className="truncate text-xs font-semibold text-white">{displayName}</p>
+            <p className="truncate text-xs text-gray-400">{displayRole}</p>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="w-full rounded-lg border border-gray-700 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-gray-300 transition hover:border-red-400 hover:text-red-300"
+        >
+          Log Out
+        </button>
       </div>
     </aside>
   );
