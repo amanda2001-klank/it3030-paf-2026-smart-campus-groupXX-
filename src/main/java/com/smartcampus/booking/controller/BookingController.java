@@ -1,6 +1,7 @@
 package com.smartcampus.booking.controller;
 
 import com.smartcampus.auth.security.AuthenticatedUser;
+import com.smartcampus.audit.service.AdminAuditLogService;
 import com.smartcampus.booking.dto.BookingRequest;
 import com.smartcampus.booking.dto.BookingResponse;
 import com.smartcampus.booking.model.BookingStatus;
@@ -21,9 +22,11 @@ import java.util.Map;
 public class BookingController {
 
     private final BookingService bookingService;
+    private final AdminAuditLogService adminAuditLogService;
 
-    public BookingController(BookingService bookingService) {
+    public BookingController(BookingService bookingService, AdminAuditLogService adminAuditLogService) {
         this.bookingService = bookingService;
+        this.adminAuditLogService = adminAuditLogService;
     }
 
     /**
@@ -89,8 +92,15 @@ public class BookingController {
      */
     @PutMapping("/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<BookingResponse> approveBooking(@PathVariable String id) {
+    public ResponseEntity<BookingResponse> approveBooking(@PathVariable String id, Authentication authentication) {
         BookingResponse response = bookingService.approveBooking(id);
+        adminAuditLogService.logAction(
+                currentUser(authentication),
+                "BOOKING_APPROVED",
+                "BOOKING",
+                response.getId(),
+                "Approved booking for " + response.getResourceName()
+        );
         return ResponseEntity.ok(response);
     }
 
@@ -101,10 +111,18 @@ public class BookingController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookingResponse> rejectBooking(
             @PathVariable String id,
-            @RequestBody Map<String, String> payload) {
+            @RequestBody Map<String, String> payload,
+            Authentication authentication) {
 
         String reason = payload.getOrDefault("reason", "No reason provided");
         BookingResponse response = bookingService.rejectBooking(id, reason);
+        adminAuditLogService.logAction(
+                currentUser(authentication),
+                "BOOKING_REJECTED",
+                "BOOKING",
+                response.getId(),
+                "Rejected booking for " + response.getResourceName() + ". Reason: " + reason
+        );
         return ResponseEntity.ok(response);
     }
 

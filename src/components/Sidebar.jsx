@@ -275,6 +275,7 @@ const Sidebar = () => {
   if (hasAdminAccess) {
     menuItems.push({ id: 'admin-bookings', label: 'Booking Requests', icon: '\u25A4', path: '/admin/bookings' });
     menuItems.push({ id: 'tickets', label: 'Incident Tickets', icon: '\u25A9', path: '/tickets' });
+    menuItems.push({ id: 'audit-logs', label: 'Audit Logs', icon: '\u25A5', path: '/admin/audit-logs' });
     menuItems.push({ id: 'users', label: 'User Management', icon: '\u25A7', path: '/users' });
     menuItems.push({ id: 'settings', label: 'Settings', icon: '\u2699', path: '/settings' });
   }
