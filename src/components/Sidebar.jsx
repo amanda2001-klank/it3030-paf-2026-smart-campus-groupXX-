@@ -320,7 +320,7 @@ const Sidebar = () => {
             </button>
 
             {isNotificationPanelOpen ? (
-              <div className="absolute right-0 top-12 z-50 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white text-slate-900 shadow-2xl">
+              <div className="absolute left-0 top-12 z-50 w-[min(20rem,calc(100vw-1rem))] overflow-hidden rounded-xl border border-gray-200 bg-white text-slate-900 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
                   <div>
                     <p className="text-sm font-semibold text-slate-900">Notifications</p>
