@@ -98,6 +98,10 @@ const CreateBookingModal = ({ isOpen, onClose, onSuccess }) => {
       newErrors.resourceId = 'Please select a resource';
     }
 
+    if (!formData.resourceName) {
+      newErrors.resourceId = 'Please select a valid resource';
+    }
+
     if (!formData.date) {
       newErrors.date = 'Date is required';
     } else if (formData.date < today) {
@@ -140,7 +144,12 @@ const CreateBookingModal = ({ isOpen, onClose, onSuccess }) => {
     
     // Special handling for resource selection
     if (name === 'resourceId') {
-      const selectedAsset = assets.find(a => a._id === value);
+      // Look for asset by id (API returns 'id', MongoDB stores as '_id')
+      const selectedAsset = assets.find(a => (a.id || a._id) === value);
+      console.log('Selected asset:', selectedAsset);
+      console.log('Available assets:', assets);
+      console.log('Looking for asset ID:', value);
+      
       setFormData((prev) => ({
         ...prev,
         resourceId: value,
@@ -181,21 +190,25 @@ const CreateBookingModal = ({ isOpen, onClose, onSuccess }) => {
     setApiError('');
 
     try {
-      // Convert date and time to ISO format
+      // Convert date and time to ISO format (YYYY-MM-DDTHH:mm:ss)
       const startDateTime = `${formData.date}T${formData.startTime}:00`;
       const endDateTime = `${formData.date}T${formData.endTime}:00`;
 
-      // Prepare payload
+      // Prepare payload - only include expectedAttendees if it has a value
       const payload = {
         resourceId: formData.resourceId,
         resourceName: formData.resourceName,
         startTime: startDateTime,
         endTime: endDateTime,
         purpose: formData.purpose,
-        expectedAttendees: formData.expectedAttendees
-          ? parseInt(formData.expectedAttendees)
-          : null,
       };
+
+      // Only add expectedAttendees if provided and valid
+      if (formData.expectedAttendees && parseInt(formData.expectedAttendees) > 0) {
+        payload.expectedAttendees = parseInt(formData.expectedAttendees);
+      }
+
+      console.log('Creating booking with payload:', payload);
 
       // Call API
       await bookingService.createBooking(payload);
@@ -217,17 +230,26 @@ const CreateBookingModal = ({ isOpen, onClose, onSuccess }) => {
       onClose();
     } catch (err) {
       // Handle API errors
+      console.error('Error creating booking:', err);
+      console.error('Error response:', err.response?.data);
+      
       if (err.response?.status === 409) {
         setApiError(
           'This resource is already booked for the selected time. Please choose a different slot.'
         );
       } else if (err.response?.status === 400) {
-        // Validation error from backend
-        setApiError('Invalid booking data. Please check your inputs.');
+        // Validation error from backend - try to extract detailed message
+        const errorData = err.response?.data;
+        if (errorData?.message) {
+          setApiError(`Booking Error: ${errorData.message}`);
+        } else if (errorData?.errors) {
+          setApiError(`Validation Error: ${JSON.stringify(errorData.errors)}`);
+        } else {
+          setApiError('Invalid booking data. Please check your inputs.');
+        }
       } else {
         setApiError('Something went wrong. Please try again.');
       }
-      console.error('Error creating booking:', err);
     } finally {
       setIsSubmitting(false);
     }
@@ -304,7 +326,7 @@ const CreateBookingModal = ({ isOpen, onClose, onSuccess }) => {
                 >
                   <option value="">-- Choose a resource --</option>
                   {Array.isArray(assets) && assets.map((asset) => (
-                    <option key={asset._id} value={asset._id}>
+                    <option key={asset.id || asset._id} value={asset.id || asset._id}>
                       {asset.assetName} {asset.capacity ? `(Capacity: ${asset.capacity})` : ''}
                     </option>
                   ))}
