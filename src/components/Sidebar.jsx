@@ -268,7 +268,9 @@ const Sidebar = () => {
     menuItems.push({ id: 'assets', label: 'Assets', icon: '\u25A3', path: '/assets' });
   }
 
-  menuItems.push({ id: 'asset-list', label: 'Asset List', icon: '\u25A8', path: '/asset-list' });
+  if (currentRole === USER_ROLES.USER) {
+    menuItems.push({ id: 'asset-list', label: 'Asset List', icon: '\u25A8', path: '/asset-list' });
+  }
 
   if (hasAdminAccess) {
     menuItems.push({ id: 'admin-bookings', label: 'Booking Requests', icon: '\u25A4', path: '/admin/bookings' });
