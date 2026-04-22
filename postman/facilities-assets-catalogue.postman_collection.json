@@ -3,7 +3,17 @@
     "_postman_id": "ab5c25aa-4f99-47d2-956d-7a4e89b97f4d",
     "name": "Smart Campus - Facilities & Assets Catalogue",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "CRUD, search, filter, and pagination requests for Module A."
+    "description": "CRUD, search, filter, and pagination requests for Module A. Catalogue APIs now use JWT bearer authentication instead of the older X-User-* mock headers."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
   },
   "variable": [
     {
@@ -11,16 +21,24 @@
       "value": "http://localhost:8080"
     },
     {
-      "key": "mockUserId",
-      "value": "asset-manager-001"
+      "key": "accessToken",
+      "value": ""
     },
     {
-      "key": "mockUserName",
-      "value": "Mock Asset Manager"
+      "key": "authEmail",
+      "value": ""
     },
     {
-      "key": "mockRole",
-      "value": "ASSET_MANAGER"
+      "key": "authPassword",
+      "value": ""
+    },
+    {
+      "key": "currentUserId",
+      "value": ""
+    },
+    {
+      "key": "currentUserRole",
+      "value": ""
     },
     {
       "key": "locationId",
@@ -40,6 +58,60 @@
     }
   ],
   "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login And Store JWT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', data.token || '');",
+                  "  if (data.user) {",
+                  "    pm.collectionVariables.set('currentUserId', data.user.userId || '');",
+                  "    pm.collectionVariables.set('currentUserRole', data.user.userRole || '');",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{authEmail}}\",\n  \"password\": \"{{authPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Use an existing ADMIN or ASSET_MANAGER account before running catalogue requests. Public registration only creates USER accounts, so it is not sufficient for create/update/delete asset management tests."
+          }
+        }
+      ]
+    },
     {
       "name": "Locations",
       "item": [
@@ -65,18 +137,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{mockUserId}}"
-              },
-              {
-                "key": "X-User-Name",
-                "value": "{{mockUserName}}"
-              },
-              {
-                "key": "X-User-Role",
-                "value": "{{mockRole}}"
               }
             ],
             "body": {
@@ -100,20 +160,7 @@
           "name": "List Locations",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "{{mockUserId}}"
-              },
-              {
-                "key": "X-User-Name",
-                "value": "{{mockUserName}}"
-              },
-              {
-                "key": "X-User-Role",
-                "value": "{{mockRole}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/catalog/locations?query=Engineering&page=0&size=10&sortBy=createdAt&sortDir=desc",
               "host": [
@@ -153,20 +200,7 @@
           "name": "Get Location By ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "{{mockUserId}}"
-              },
-              {
-                "key": "X-User-Name",
-                "value": "{{mockUserName}}"
-              },
-              {
-                "key": "X-User-Role",
-                "value": "{{mockRole}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/catalog/locations/{{locationId}}",
               "host": [
@@ -189,18 +223,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{mockUserId}}"
-              },
-              {
-                "key": "X-User-Name",
-                "value": "{{mockUserName}}"
-              },
-              {
-                "key": "X-User-Role",
-                "value": "{{mockRole}}"
               }
             ],
             "body": {
@@ -225,20 +247,7 @@
           "name": "Delete Location",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "{{mockUserId}}"
-              },
-              {
-                "key": "X-User-Name",
-                "value": "{{mockUserName}}"
-              },
-              {
-                "key": "X-User-Role",
-                "value": "{{mockRole}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/catalog/locations/{{locationId}}",
               "host": [
@@ -280,18 +289,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{mockUserId}}"
-              },
-              {
-                "key": "X-User-Name",
-                "value": "{{mockUserName}}"
-              },
-              {
-                "key": "X-User-Role",
-                "value": "{{mockRole}}"
               }
             ],
             "body": {
@@ -315,20 +312,7 @@
           "name": "List Asset Types",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "{{mockUserId}}"
-              },
-              {
-                "key": "X-User-Name",
-                "value": "{{mockUserName}}"
-              },
-              {
-                "key": "X-User-Role",
-                "value": "{{mockRole}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/catalog/asset-types?query=LECTURE&page=0&size=10&sortBy=name&sortDir=asc",
               "host": [
@@ -368,20 +352,7 @@
           "name": "Get Asset Type By ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "{{mockUserId}}"
-              },
-              {
-                "key": "X-User-Name",
-                "value": "{{mockUserName}}"
-              },
-              {
-                "key": "X-User-Role",
-                "value": "{{mockRole}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/catalog/asset-types/{{assetTypeId}}",
               "host": [
@@ -404,18 +375,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{mockUserId}}"
-              },
-              {
-                "key": "X-User-Name",
-                "value": "{{mockUserName}}"
-              },
-              {
-                "key": "X-User-Role",
-                "value": "{{mockRole}}"
               }
             ],
             "body": {
@@ -440,20 +399,7 @@
           "name": "Delete Asset Type",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "{{mockUserId}}"
-              },
-              {
-                "key": "X-User-Name",
-                "value": "{{mockUserName}}"
-              },
-              {
-                "key": "X-User-Role",
-                "value": "{{mockRole}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/catalog/asset-types/{{assetTypeId}}",
               "host": [
@@ -494,20 +440,7 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "{{mockUserId}}"
-              },
-              {
-                "key": "X-User-Name",
-                "value": "{{mockUserName}}"
-              },
-              {
-                "key": "X-User-Role",
-                "value": "{{mockRole}}"
-              }
-            ],
+            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -879,20 +812,7 @@
           "name": "Update Asset",
           "request": {
             "method": "PUT",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "{{mockUserId}}"
-              },
-              {
-                "key": "X-User-Name",
-                "value": "{{mockUserName}}"
-              },
-              {
-                "key": "X-User-Role",
-                "value": "{{mockRole}}"
-              }
-            ],
+            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -982,20 +902,7 @@
           "name": "Delete Asset",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "{{mockUserId}}"
-              },
-              {
-                "key": "X-User-Name",
-                "value": "{{mockUserName}}"
-              },
-              {
-                "key": "X-User-Role",
-                "value": "{{mockRole}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/catalog/assets/{{assetId}}",
               "host": [
