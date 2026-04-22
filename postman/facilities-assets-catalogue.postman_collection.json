@@ -107,7 +107,7 @@
                 "login"
               ]
             },
-            "description": "Use an existing ADMIN or ASSET_MANAGER account before running catalogue requests. Public registration only creates USER accounts, so it is not sufficient for create/update/delete asset management tests."
+            "description": "Use an existing account before running catalogue requests. ADMIN or ASSET_MANAGER is required for create/update/delete asset management requests, while USER is required for asset rating requests."
           }
         }
       ]
@@ -761,6 +761,88 @@
                 "{{assetId}}"
               ]
             }
+          }
+        },
+        {
+          "name": "Get Asset Ratings Overview",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/assets/{{assetId}}/ratings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "assets",
+                "{{assetId}}",
+                "ratings"
+              ]
+            },
+            "description": "Requires any authenticated user. Returns rating summary, current-user eligibility, current-user review if present, and the review list."
+          }
+        },
+        {
+          "name": "Create Asset Rating",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"reviewText\": \"The hall was clean, the projector worked properly, and the seating layout was ideal for our session.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/assets/{{assetId}}/ratings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "assets",
+                "{{assetId}}",
+                "ratings"
+              ]
+            },
+            "description": "Requires a USER token and at least one APPROVED booking for this asset. One rating document is allowed per user per asset."
+          }
+        },
+        {
+          "name": "Update My Asset Rating",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 4,\n  \"reviewText\": \"The asset was useful overall, but the audio level needed some manual adjustment during the booking.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/assets/{{assetId}}/ratings/my-rating",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "assets",
+                "{{assetId}}",
+                "ratings",
+                "my-rating"
+              ]
+            },
+            "description": "Requires a USER token, an existing review by the logged-in user, and at least one APPROVED booking for this asset."
           }
         },
         {
