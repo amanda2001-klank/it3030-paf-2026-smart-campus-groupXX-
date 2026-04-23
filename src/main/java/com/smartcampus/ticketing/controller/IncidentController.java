@@ -1,0 +1,83 @@
+package com.smartcampus.ticketing.controller;
+
+import com.smartcampus.auth.security.AuthenticatedUser;
+import com.smartcampus.ticketing.dto.CommentRequest;
+import com.smartcampus.ticketing.dto.IncidentRequest;
+import com.smartcampus.ticketing.dto.IncidentResponse;
+import com.smartcampus.ticketing.service.IncidentService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@Validated
+@RequestMapping("/api/ticketing/incidents")
+public class IncidentController {
+
+    private final IncidentService incidentService;
+
+    public IncidentController(IncidentService incidentService) {
+        this.incidentService = incidentService;
+    }
+
+    @PostMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<IncidentResponse> createIncident(
+            @Valid @RequestBody IncidentRequest request,
+            Authentication authentication) {
+        AuthenticatedUser actor = currentUser(authentication);
+        IncidentResponse created = incidentService.createIncident(request, actor.getUserId(), actor.getUserName());
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<IncidentResponse>> getAllIncidents() {
+        return ResponseEntity.ok(incidentService.getAllIncidents());
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<IncidentResponse> getIncidentById(@PathVariable String id) {
+        return ResponseEntity.ok(incidentService.getIncidentById(id));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN')")
+    public ResponseEntity<IncidentResponse> updateIncident(
+            @PathVariable String id,
+            @Valid @RequestBody IncidentRequest request,
+            Authentication authentication) {
+        AuthenticatedUser actor = currentUser(authentication);
+        return ResponseEntity.ok(incidentService.updateIncident(id, request, actor.getUserId(), actor.getUserName()));
+    }
+
+    @PostMapping("/{id}/comments")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<IncidentResponse> addComment(
+            @PathVariable String id,
+            @Valid @RequestBody CommentRequest request,
+            Authentication authentication) {
+        AuthenticatedUser actor = currentUser(authentication);
+        // In a real app, you'd check roles for isStaff
+        boolean isStaff = "ADMIN".equals(actor.getRole()) || "TECHNICIAN".equals(actor.getRole());
+        return ResponseEntity.ok(incidentService.addComment(id, request, actor.getUserId(), actor.getUserName(), isStaff));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteIncident(@PathVariable String id) {
+        incidentService.deleteIncident(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    private AuthenticatedUser currentUser(Authentication authentication) {
+        return (AuthenticatedUser) authentication.getPrincipal();
+    }
+}
