@@ -20,9 +20,11 @@ import java.util.stream.Collectors;
 public class IncidentServiceImpl implements IncidentService {
 
     private final IncidentRepository incidentRepository;
+    private final com.smartcampus.auth.service.AdminUserService adminUserService;
 
-    public IncidentServiceImpl(IncidentRepository incidentRepository) {
+    public IncidentServiceImpl(IncidentRepository incidentRepository, com.smartcampus.auth.service.AdminUserService adminUserService) {
         this.incidentRepository = incidentRepository;
+        this.adminUserService = adminUserService;
     }
 
     @Override
@@ -50,6 +52,22 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<IncidentResponse> getIncidentsByTechnician(String technicianId) {
+        return incidentRepository.findByAssignedTechnicianId(technicianId).stream()
+                .map(IncidentResponse::fromIncident)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<IncidentResponse> getIncidentsByReporter(String reporterId) {
+        return incidentRepository.findByReportedById(reporterId).stream()
+                .map(IncidentResponse::fromIncident)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public IncidentResponse getIncidentById(String id) {
         Incident incident = incidentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Incident not found with id: " + id));
@@ -66,9 +84,15 @@ public class IncidentServiceImpl implements IncidentService {
         if (request.getPriority() != null) incident.setPriority(request.getPriority());
         if (request.getStatus() != null) incident.setStatus(request.getStatus());
         if (request.getAssignedTechnicianId() != null) {
-            incident.setAssignedTechnicianId(request.getAssignedTechnicianId());
-            // In a real app, you'd fetch the technician name from the User service
-            incident.setAssignedTechnicianName("Technician " + request.getAssignedTechnicianId().substring(0, 4));
+            String techId = request.getAssignedTechnicianId();
+            if ("UNASSIGNED".equalsIgnoreCase(techId) || techId.isBlank()) {
+                incident.setAssignedTechnicianId(null);
+                incident.setAssignedTechnicianName(null);
+            } else {
+                com.smartcampus.auth.dto.AdminUserResponse technician = adminUserService.getUserById(techId);
+                incident.setAssignedTechnicianId(technician.getId());
+                incident.setAssignedTechnicianName(technician.getUserName());
+            }
         }
 
         Incident saved = incidentRepository.save(incident);

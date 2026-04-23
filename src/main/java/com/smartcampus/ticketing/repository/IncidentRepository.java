@@ -13,4 +13,5 @@ public interface IncidentRepository extends MongoRepository<Incident, String> {
     Optional<Incident> findByTicketNumber(String ticketNumber);
     List<Incident> findByStatus(IncidentStatus status);
     List<Incident> findByReportedById(String reportedById);
+    List<Incident> findByAssignedTechnicianId(String assignedTechnicianId);
 }

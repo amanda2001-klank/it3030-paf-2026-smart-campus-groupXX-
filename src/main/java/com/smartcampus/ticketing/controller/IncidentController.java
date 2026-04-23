@@ -37,9 +37,23 @@ public class IncidentController {
     }
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<IncidentResponse>> getAllIncidents() {
         return ResponseEntity.ok(incidentService.getAllIncidents());
+    }
+
+    @GetMapping("/my-reported")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<IncidentResponse>> getMyReportedIncidents(Authentication authentication) {
+        AuthenticatedUser actor = currentUser(authentication);
+        return ResponseEntity.ok(incidentService.getIncidentsByReporter(actor.getUserId()));
+    }
+
+    @GetMapping("/my-assigned")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TECHNICIAN')")
+    public ResponseEntity<List<IncidentResponse>> getMyAssignedIncidents(Authentication authentication) {
+        AuthenticatedUser actor = currentUser(authentication);
+        return ResponseEntity.ok(incidentService.getIncidentsByTechnician(actor.getUserId()));
     }
 
     @GetMapping("/{id}")
