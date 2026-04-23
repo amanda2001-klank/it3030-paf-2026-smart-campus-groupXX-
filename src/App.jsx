@@ -16,6 +16,7 @@ import TechnicianDashboardPage from './pages/TechnicianDashboardPage';
 import UserBookingPage from './pages/UserBookingPage';
 import UserDashboardPage from './pages/UserDashboardPage';
 import UserManagementPage from './pages/UserManagementPage';
+import IncidentTicketsPage from './pages/IncidentTicketsPage';
 import {
   getCurrentUser,
   getDashboardPathForRole,
@@ -166,10 +167,7 @@ const ProtectedShell = () => {
             path="/tickets"
             element={
               <RoleRoute allowedRoles={[USER_ROLES.ADMIN]}>
-                <PlaceholderPage
-                  title="Incident Tickets"
-                  description="Ticketing workflows can be added here with role-based triage and technician assignment."
-                />
+                <IncidentTicketsPage />
               </RoleRoute>
             }
           />
