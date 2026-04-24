@@ -101,7 +101,7 @@ public class IncidentServiceImpl implements IncidentService {
                 incident.setAssignedTechnicianName(null);
             } else {
                 com.smartcampus.auth.dto.AdminUserResponse technician = adminUserService.getUserById(techId);
-                incident.setAssignedTechnicianId(technician.getId());
+                incident.setAssignedTechnicianId(technician.getUserId());
                 incident.setAssignedTechnicianName(technician.getUserName());
             }
         }
