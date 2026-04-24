@@ -49,6 +49,13 @@ public class AdminUserService {
                 .toList();
     }
 
+    public List<AdminUserResponse> listUsersByRole(UserRole role) {
+        return appUserRepository.findByRole(role)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     public AdminUserResponse getUserById(String userId) {
         return toResponse(findUserById(userId));
     }

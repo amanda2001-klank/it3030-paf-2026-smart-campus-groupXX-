@@ -62,7 +62,7 @@ const TechnicianTicketsPage = () => {
       const res = await addComment(selectedIncident.id, message);
       setSelectedIncident(prev => ({
         ...prev,
-        discussion: [...prev.discussion, res.data]
+        discussion: res.data.discussion
       }));
     } catch (error) {
       console.error('Failed to add comment:', error);

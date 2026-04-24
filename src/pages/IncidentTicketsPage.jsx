@@ -4,7 +4,9 @@ import {
   getIncidentById, 
   getIncidentStats, 
   updateIncident, 
-  addComment 
+  addComment,
+  deleteIncident,
+  getTechnicians
 } from '../services/incidentService';
 import { API_BASE_URL } from '../services/apiClient';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -27,19 +29,24 @@ const IncidentTicketsPage = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [technicians, setTechnicians] = useState([]);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editData, setEditData] = useState({ title: '', priority: '', description: '' });
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [incidentsRes, statsRes] = await Promise.all([
+      const [incidentsRes, statsRes, techRes] = await Promise.all([
         getIncidents(),
-        getIncidentStats()
+        getIncidentStats(),
+        getTechnicians()
       ]);
       setIncidents(incidentsRes.data);
       setStats(statsRes.data);
+      setTechnicians(techRes.data);
       
       // Select the first incident by default
-      if (incidentsRes.data.length > 0) {
+      if (incidentsRes.data.length > 0 && !selectedIncident) {
         handleSelectIncident(incidentsRes.data[0].id);
       }
     } catch (error) {
@@ -76,10 +83,62 @@ const IncidentTicketsPage = () => {
       const res = await addComment(selectedIncident.id, message);
       setSelectedIncident(prev => ({
         ...prev,
-        discussion: [...prev.discussion, res.data]
+        discussion: res.data.discussion // Use the updated discussion list from response
       }));
     } catch (error) {
       console.error('Failed to add comment:', error);
+    }
+  };
+
+  const handleDeleteTicket = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this ticket?')) return;
+    try {
+      await deleteIncident(id);
+      setIncidents(prev => prev.filter(inc => inc.id !== id));
+      if (selectedIncident?.id === id) {
+        setSelectedIncident(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete incident:', error);
+    }
+  };
+
+  const handleAssignTechnician = async (techId) => {
+    if (!selectedIncident) return;
+    setUpdating(true);
+    try {
+      const res = await updateIncident(selectedIncident.id, { assignedTechnicianId: techId });
+      setSelectedIncident(res.data);
+      setIncidents(prev => prev.map(inc => inc.id === selectedIncident.id ? res.data : inc));
+    } catch (error) {
+      console.error('Failed to assign technician:', error);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleOpenEdit = () => {
+    if (!selectedIncident) return;
+    setEditData({
+      title: selectedIncident.title,
+      priority: selectedIncident.priority,
+      description: selectedIncident.description
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedIncident) return;
+    setUpdating(true);
+    try {
+      const res = await updateIncident(selectedIncident.id, editData);
+      setSelectedIncident(res.data);
+      setIncidents(prev => prev.map(inc => inc.id === selectedIncident.id ? res.data : inc));
+      setShowEditModal(false);
+    } catch (error) {
+      console.error('Failed to update incident:', error);
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -186,7 +245,7 @@ const IncidentTicketsPage = () => {
                       onClick={() => handleSelectIncident(inc.id)}
                       className={`group cursor-pointer transition duration-200 hover:bg-blue-50/50 ${selectedIncident?.id === inc.id ? 'bg-blue-50/80' : ''}`}
                     >
-                      <td className="px-6 py-6 text-xs font-bold text-slate-400">{inc.id}</td>
+                      <td className="px-6 py-6 text-xs font-bold text-slate-400">{inc.ticketNumber}</td>
                       <td className="px-6 py-6">
                         <div className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition">{inc.title}</div>
                       </td>
@@ -198,12 +257,12 @@ const IncidentTicketsPage = () => {
                       </td>
                       <td className="px-6 py-6">
                         <div className="flex items-center gap-2">
-                          {inc.assignedTo ? (
+                          {inc.assignedTechnicianName ? (
                             <>
                               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-600">
-                                {inc.assignedTo.split(' ').map(n => n[0]).join('')}
+                                {inc.assignedTechnicianName.split(' ').map(n => n[0]).join('')}
                               </div>
-                              <span className="text-sm font-medium text-slate-600">{inc.assignedTo}</span>
+                              <span className="text-sm font-medium text-slate-600">{inc.assignedTechnicianName}</span>
                             </>
                           ) : (
                             <span className="text-sm italic text-slate-400">Unassigned</span>
@@ -239,7 +298,7 @@ const IncidentTicketsPage = () => {
               </div>
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-wider opacity-80">TICKET WORKFLOW</h3>
-                <p className="text-xs opacity-60">Ticket #{selectedIncident?.id} Lifecycle</p>
+                <p className="text-xs opacity-60">Ticket #{selectedIncident?.ticketNumber} Lifecycle</p>
               </div>
             </div>
 
@@ -266,29 +325,40 @@ const IncidentTicketsPage = () => {
                 <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest opacity-60">ASSIGN TECHNICIAN</label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <div className="flex items-center gap-3 w-full rounded-xl bg-white/10 px-5 py-3.5 backdrop-blur-md border border-white/10">
-                      <div className="h-6 w-6 overflow-hidden rounded-full bg-white/20">
-                        <div className="flex h-full w-full items-center justify-center text-[8px] font-bold">
-                          {selectedIncident?.technicianAvatar || 'UA'}
-                        </div>
-                      </div>
-                      <span className="text-sm font-bold">{selectedIncident?.assignedTo || 'Unassigned'}</span>
-                    </div>
-                  </div>
-                  <button className="rounded-xl bg-[#15803D] p-3 shadow-lg hover:bg-[#16a34a] transition active:scale-95">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    <select 
+                      value={selectedIncident?.assignedTechnicianId || ''}
+                      onChange={(e) => handleAssignTechnician(e.target.value)}
+                      className="w-full appearance-none rounded-xl bg-white/10 px-5 py-4 text-sm font-bold backdrop-blur-md focus:bg-white/20 focus:outline-none border border-white/10 text-white"
+                    >
+                      <option value="" className="text-slate-800">Select Technician</option>
+                      <option value="UNASSIGNED" className="text-slate-800">Unassign</option>
+                      {technicians.map(tech => (
+                        <option key={tech.userId} value={tech.userId} className="text-slate-800">
+                          {tech.userName}
+                        </option>
+                      ))}
+                    </select>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-                  </button>
+                  </div>
                 </div>
               </div>
 
-              <button 
-                className="w-full rounded-xl bg-white py-4 text-sm font-bold text-blue-700 shadow-xl shadow-blue-900/20 transition hover:bg-blue-50 active:scale-[0.98] mt-4"
-                disabled={updating}
-              >
-                {updating ? 'Saving...' : 'Save Changes'}
-              </button>
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <button 
+                  onClick={handleOpenEdit}
+                  className="rounded-xl bg-white py-4 text-sm font-bold text-blue-700 shadow-xl shadow-blue-900/20 transition hover:bg-blue-50 active:scale-[0.98]"
+                >
+                  Edit Details
+                </button>
+                <button 
+                  onClick={() => handleDeleteTicket(selectedIncident.id)}
+                  className="rounded-xl bg-red-600/20 py-4 text-sm font-bold text-white border border-white/20 transition hover:bg-red-600/30 active:scale-[0.98]"
+                >
+                  Delete Ticket
+                </button>
+              </div>
             </div>
           </section>
 
@@ -325,6 +395,62 @@ const IncidentTicketsPage = () => {
           colorClass="border-gray-300" 
         />
       </div>
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl">
+            <h3 className="text-2xl font-bold text-slate-800 mb-6">Edit Ticket Details</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Title</label>
+                <input 
+                  type="text" 
+                  value={editData.title}
+                  onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-400 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Priority</label>
+                <select 
+                  value={editData.priority}
+                  onChange={(e) => setEditData({ ...editData, priority: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-400 focus:outline-none"
+                >
+                  <option value="LOW">LOW</option>
+                  <option value="MEDIUM">MEDIUM</option>
+                  <option value="HIGH">HIGH</option>
+                  <option value="CRITICAL">CRITICAL</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Description</label>
+                <textarea 
+                  rows={4}
+                  value={editData.description}
+                  onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-400 focus:outline-none"
+                />
+              </div>
+            </div>
+            <div className="mt-8 flex gap-4">
+              <button 
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-bold text-slate-600 hover:bg-slate-200 transition"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSaveEdit}
+                disabled={updating}
+                className="flex-1 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {updating ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

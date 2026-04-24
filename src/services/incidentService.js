@@ -35,6 +35,14 @@ export const addComment = (id, message) => {
   return apiClient.post(`/api/ticketing/incidents/${id}/comments`, { message });
 };
 
+export const deleteIncident = (id) => {
+  return apiClient.delete(`/api/ticketing/incidents/${id}`);
+};
+
+export const getTechnicians = () => {
+  return apiClient.get('/api/ticketing/incidents/technicians');
+};
+
 // For stats in Admin Dashboard
 export const getIncidentStats = async () => {
   const res = await getIncidents();

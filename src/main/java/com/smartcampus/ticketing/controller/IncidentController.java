@@ -109,6 +109,12 @@ public class IncidentController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/technicians")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<com.smartcampus.auth.dto.AdminUserResponse>> getTechnicians() {
+        return ResponseEntity.ok(incidentService.getTechnicians());
+    }
+
     private AuthenticatedUser currentUser(Authentication authentication) {
         return (AuthenticatedUser) authentication.getPrincipal();
     }

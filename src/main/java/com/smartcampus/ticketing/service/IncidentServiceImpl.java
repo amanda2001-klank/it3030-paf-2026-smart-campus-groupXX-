@@ -129,4 +129,10 @@ public class IncidentServiceImpl implements IncidentService {
         }
         incidentRepository.deleteById(id);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<com.smartcampus.auth.dto.AdminUserResponse> getTechnicians() {
+        return adminUserService.listUsersByRole(com.smartcampus.auth.model.UserRole.TECHNICIAN);
+    }
 }

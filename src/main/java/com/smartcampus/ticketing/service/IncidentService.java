@@ -16,4 +16,5 @@ public interface IncidentService {
     IncidentResponse updateIncident(String id, IncidentRequest request, String actorId, String actorName);
     IncidentResponse addComment(String id, CommentRequest request, String actorId, String actorName, boolean isStaff);
     void deleteIncident(String id);
+    List<com.smartcampus.auth.dto.AdminUserResponse> getTechnicians();
 }

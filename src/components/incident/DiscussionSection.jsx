@@ -22,15 +22,17 @@ const DiscussionSection = ({ discussions = [], onSendMessage }) => {
       </div>
 
       <div className="flex-1 space-y-6 overflow-y-auto mb-6 pr-2 custom-scrollbar">
-        {discussions.map((msg) => (
-          <div key={msg.id} className="flex gap-4">
+        {discussions.map((msg, index) => (
+          <div key={index} className="flex gap-4">
             <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${msg.isStaff ? 'bg-indigo-600' : 'bg-slate-800'}`}>
-              {msg.author.split(' ').map(n => n[0]).join('')}
+              {msg.authorName ? msg.authorName.split(' ').map(n => n[0]).join('') : 'U'}
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-bold text-slate-900">{msg.author}</span>
-                <span className="text-[10px] font-medium text-slate-400">{msg.time}</span>
+                <span className="text-xs font-bold text-slate-900">{msg.authorName}</span>
+                <span className="text-[10px] font-medium text-slate-400">
+                  {msg.timestamp ? new Date(msg.timestamp).toLocaleString() : ''}
+                </span>
               </div>
               <div className={`rounded-2xl p-4 text-sm leading-relaxed ${msg.isStaff ? 'bg-slate-50 text-slate-700' : 'bg-blue-50 text-slate-700'}`}>
                 {msg.message}
