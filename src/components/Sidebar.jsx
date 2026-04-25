@@ -61,6 +61,10 @@ const Sidebar = () => {
     const entityType = notification.entityType || '';
 
     if (entityType === 'BOOKING') {
+      if (currentRole === USER_ROLES.ASSET_MANAGER) {
+        return '/dashboard/asset-manager/bookings';
+      }
+
       if (hasAdminAccess && ['BOOKING_CREATED', 'BOOKING_CANCELLED'].includes(notification.type)) {
         return '/admin/bookings';
       }
@@ -272,6 +276,10 @@ const Sidebar = () => {
   if (currentRole === USER_ROLES.USER) {
     menuItems.push({ id: 'asset-list', label: 'Asset List', icon: '\u25A8', path: '/asset-list' });
     menuItems.push({ id: 'my-bookings', label: 'My Bookings', icon: '\u25A4', path: '/bookings' });
+  }
+
+  if (currentRole === USER_ROLES.ASSET_MANAGER) {
+    menuItems.push({ id: 'asset-manager-bookings', label: 'Booking Requests', icon: '\u25A4', path: '/dashboard/asset-manager/bookings' });
   }
 
   if (hasAdminAccess) {

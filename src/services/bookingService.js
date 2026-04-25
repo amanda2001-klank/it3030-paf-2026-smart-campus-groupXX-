@@ -76,7 +76,7 @@ export const getBookingById = (id) => {
 };
 
 /**
- * Approve a pending booking request (Admin only)
+ * Approve a pending booking request (Asset Manager only)
  * @param {string} id - Booking ID
  * @returns {Promise} Updated booking object with status APPROVED
  */

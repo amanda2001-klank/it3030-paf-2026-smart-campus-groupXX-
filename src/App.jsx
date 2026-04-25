@@ -13,6 +13,7 @@ import LoginPage from './pages/LoginPage';
 import PlaceholderPage from './pages/PlaceholderPage';
 import RegisterPage from './pages/RegisterPage';
 import TechnicianDashboardPage from './pages/TechnicianDashboardPage';
+import BookingManagement from './pages/BookingManagement';
 import UserBookingPage from './pages/UserBookingPage';
 import UserDashboardPage from './pages/UserDashboardPage';
 import UserManagementPage from './pages/UserManagementPage';
@@ -150,6 +151,14 @@ const ProtectedShell = () => {
             element={
               <RoleRoute allowedRoles={ALL_AUTH_ROLES}>
                 <UserBookingPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/dashboard/asset-manager/bookings"
+            element={
+              <RoleRoute allowedRoles={[USER_ROLES.ASSET_MANAGER]}>
+                <BookingManagement />
               </RoleRoute>
             }
           />
