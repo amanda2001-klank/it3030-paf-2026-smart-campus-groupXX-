@@ -444,6 +444,7 @@ const BookingManagement = () => {
             <p className="text-gray-600 text-sm">Utilization data is being loaded...</p>
           </div>
         </div>
+
       </div>
 
       {/* Create Booking Modal */}

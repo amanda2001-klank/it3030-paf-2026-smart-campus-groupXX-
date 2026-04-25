@@ -282,6 +282,10 @@ const Sidebar = () => {
     menuItems.push({ id: 'asset-manager-bookings', label: 'Booking Requests', icon: '\u25A4', path: '/dashboard/asset-manager/bookings' });
   }
 
+  if (hasManagerAccess) {
+    menuItems.push({ id: 'booking-analytics', label: 'Booking Analytics', icon: '\u25A0', path: '/booking-analytics' });
+  }
+
   if (hasAdminAccess) {
     menuItems.push({ id: 'admin-bookings', label: 'Booking Requests', icon: '\u25A4', path: '/admin/bookings' });
     menuItems.push({ id: 'tickets', label: 'Incident Tickets', icon: '\u25A9', path: '/tickets' });
