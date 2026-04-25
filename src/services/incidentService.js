@@ -22,9 +22,7 @@ export const getIncidentById = (id) => {
 };
 
 export const createIncident = (formData) => {
-  return apiClient.post('/api/ticketing/incidents', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  return apiClient.post('/api/ticketing/incidents', formData);
 };
 
 export const updateIncident = (id, payload) => {

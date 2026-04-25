@@ -69,7 +69,9 @@ const RaiseTicketPage = () => {
       setToast({ type: 'success', message: 'Ticket raised successfully!' });
       setTimeout(() => navigate('/tickets/my'), 1500);
     } catch (error) {
-      setToast({ type: 'error', message: 'Failed to raise ticket. Please try again.' });
+      console.error('Ticket submission error:', error);
+      const message = error.response?.data?.message || 'Failed to raise ticket. Please try again.';
+      setToast({ type: 'error', message });
     } finally {
       setLoading(false);
     }
