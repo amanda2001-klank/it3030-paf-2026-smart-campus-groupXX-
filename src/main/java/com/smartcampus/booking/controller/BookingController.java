@@ -2,6 +2,7 @@ package com.smartcampus.booking.controller;
 
 import com.smartcampus.auth.security.AuthenticatedUser;
 import com.smartcampus.audit.service.AdminAuditLogService;
+import com.smartcampus.booking.dto.AssetUsageAnalyticsResponse;
 import com.smartcampus.booking.dto.BookingRequest;
 import com.smartcampus.booking.dto.BookingResponse;
 import com.smartcampus.booking.model.BookingStatus;
@@ -94,6 +95,19 @@ public class BookingController {
     public ResponseEntity<BookingResponse> getBookingById(@PathVariable String id) {
         BookingResponse booking = bookingService.getBookingById(id);
         return ResponseEntity.ok(booking);
+    }
+
+    /**
+     * Get booking usage analytics grouped by asset.
+     * Supports period=WEEKLY|MONTHLY.
+     */
+    @GetMapping("/analytics/asset-usage")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ASSET_MANAGER')")
+    public ResponseEntity<AssetUsageAnalyticsResponse> getAssetUsageAnalytics(
+            @RequestParam(value = "period", defaultValue = "WEEKLY") String period) {
+
+        AssetUsageAnalyticsResponse response = bookingService.getAssetUsageAnalytics(period);
+        return ResponseEntity.ok(response);
     }
 
     /**
