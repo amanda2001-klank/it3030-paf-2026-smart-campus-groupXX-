@@ -60,11 +60,11 @@ public class BookingController {
     }
 
     /**
-     * Get all bookings (admin only)
+     * Get all bookings (admin and asset manager)
      * Can filter by status using ?status=PENDING|APPROVED|REJECTED|CANCELLED
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ASSET_MANAGER')")
     public ResponseEntity<List<BookingResponse>> getAllBookings(
             @RequestParam(value = "status", required = false) BookingStatus status) {
 
@@ -90,17 +90,17 @@ public class BookingController {
      * Get booking by ID.
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ASSET_MANAGER')")
     public ResponseEntity<BookingResponse> getBookingById(@PathVariable String id) {
         BookingResponse booking = bookingService.getBookingById(id);
         return ResponseEntity.ok(booking);
     }
 
     /**
-     * Approve a pending booking (admin only).
+     * Approve a pending booking (asset manager only).
      */
     @PutMapping("/{id}/approve")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ASSET_MANAGER')")
     public ResponseEntity<BookingResponse> approveBooking(@PathVariable String id, Authentication authentication) {
         BookingResponse response = bookingService.approveBooking(id);
         adminAuditLogService.logAction(
@@ -114,10 +114,10 @@ public class BookingController {
     }
 
     /**
-     * Reject a pending booking (admin only).
+     * Reject a pending booking (asset manager only).
      */
     @PutMapping("/{id}/reject")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ASSET_MANAGER')")
     public ResponseEntity<BookingResponse> rejectBooking(
             @PathVariable String id,
             @RequestBody Map<String, String> payload,
