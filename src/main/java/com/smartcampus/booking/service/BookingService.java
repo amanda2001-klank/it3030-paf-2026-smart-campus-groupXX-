@@ -1,12 +1,9 @@
 package com.smartcampus.booking.service;
 
-<<<<<<< HEAD
-=======
 import com.smartcampus.auth.model.AppUser;
 import com.smartcampus.auth.repository.AppUserRepository;
 import com.smartcampus.booking.dto.AssetUsageAnalyticsResponse;
 import com.smartcampus.booking.dto.AssetUsageMetricResponse;
->>>>>>> main
 import com.smartcampus.booking.dto.BookingRequest;
 import com.smartcampus.booking.dto.BookingResponse;
 import com.smartcampus.booking.exception.BadRequestException;
@@ -19,7 +16,10 @@ import com.smartcampus.booking.repository.BookingRepository;
 import com.smartcampus.catalog.model.Asset;
 import com.smartcampus.catalog.repository.AssetRepository;
 import com.smartcampus.catalog.util.IdValidationUtils;
+import com.smartcampus.notification.service.EmailService;
 import com.smartcampus.notification.service.NotificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,18 +39,29 @@ import java.util.stream.Collectors;
 @Transactional
 public class BookingService {
 
+    private static final Logger logger = LoggerFactory.getLogger(BookingService.class);
+
     private final BookingRepository bookingRepository;
     private final AssetRepository assetRepository;
     private final NotificationService notificationService;
+    private final BookingReceiptService bookingReceiptService;
+    private final EmailService emailService;
+    private final AppUserRepository appUserRepository;
 
     public BookingService(
             BookingRepository bookingRepository,
             AssetRepository assetRepository,
-            NotificationService notificationService
+            NotificationService notificationService,
+            BookingReceiptService bookingReceiptService,
+            EmailService emailService,
+            AppUserRepository appUserRepository
     ) {
         this.bookingRepository = bookingRepository;
         this.assetRepository = assetRepository;
         this.notificationService = notificationService;
+        this.bookingReceiptService = bookingReceiptService;
+        this.emailService = emailService;
+        this.appUserRepository = appUserRepository;
     }
 
     /**
@@ -101,7 +112,8 @@ public class BookingService {
     }
 
     /**
-     * Approve a pending booking
+     * Approve a pending booking and send receipt
+     * Generates a PDF receipt and sends it to the user's email
      * 
      * @param id the booking ID
      * @return BookingResponse with APPROVED status
@@ -119,7 +131,52 @@ public class BookingService {
         booking.setStatus(BookingStatus.APPROVED);
         Booking updatedBooking = bookingRepository.save(booking);
         notificationService.notifyUserBookingApproved(updatedBooking);
+
+        // Generate and send receipt PDF
+        try {
+            sendBookingReceiptToUser(updatedBooking);
+        } catch (Exception e) {
+            logger.error("Failed to send booking receipt for booking ID: {}", id, e);
+            // Don't throw exception - booking is already approved
+            // Email sending failure should not block the approval
+        }
+
         return BookingResponse.fromBooking(updatedBooking);
+    }
+
+    /**
+     * Generate booking receipt PDF and send it to the user
+     *
+     * @param booking the approved booking
+     */
+    private void sendBookingReceiptToUser(Booking booking) {
+        try {
+            // Get user email
+            AppUser user = appUserRepository.findById(booking.getRequestedById())
+                    .orElse(null);
+
+            if (user == null || user.getEmail() == null) {
+                logger.warn("Cannot send receipt - User email not found for booking ID: {}", booking.getId());
+                return;
+            }
+
+            // Generate PDF receipt
+            byte[] pdfContent = bookingReceiptService.generateBookingReceiptPdf(booking);
+
+            // Send email with attachment
+            emailService.sendBookingApprovalEmailWithReceipt(
+                    user.getEmail(),
+                    booking.getRequestedByName(),
+                    booking.getResourceName(),
+                    booking.getId(),
+                    pdfContent
+            );
+
+            logger.info("Booking receipt sent successfully to: {} for booking ID: {}", user.getEmail(), booking.getId());
+        } catch (Exception e) {
+            logger.error("Error sending booking receipt for booking ID: {}", booking.getId(), e);
+            throw new RuntimeException("Failed to send booking receipt", e);
+        }
     }
 
     /**
@@ -218,8 +275,6 @@ public class BookingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + id));
         return BookingResponse.fromBooking(booking);
     }
-<<<<<<< HEAD
-=======
 
     /**
      * Get a booking entity by ID (internal use for PDF generation)
@@ -362,5 +417,4 @@ public class BookingService {
             this.resourceName = resourceName;
         }
     }
->>>>>>> main
 }
