@@ -73,8 +73,9 @@ public class IncidentMediaStorageService {
 
     public Resource loadMediaAsResource(String relativePath) {
         try {
+            String decodedPath = java.net.URLDecoder.decode(relativePath, java.nio.charset.StandardCharsets.UTF_8);
             Path projectRoot = Paths.get("").toAbsolutePath().normalize();
-            Path filePath = projectRoot.resolve(relativePath).normalize();
+            Path filePath = projectRoot.resolve(decodedPath).normalize();
             
             if (!filePath.startsWith(projectRoot)) {
                 throw new BadRequestException("Invalid file path");

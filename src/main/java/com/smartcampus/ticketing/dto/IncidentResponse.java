@@ -14,6 +14,7 @@ public class IncidentResponse {
     private String ticketNumber;
     private String title;
     private String description;
+    private String category;
     private IncidentPriority priority;
     private IncidentStatus status;
     private String assignedTechnicianId;
@@ -31,6 +32,7 @@ public class IncidentResponse {
         response.setTicketNumber(incident.getTicketNumber());
         response.setTitle(incident.getTitle());
         response.setDescription(incident.getDescription());
+        response.setCategory(incident.getCategory());
         response.setPriority(incident.getPriority());
         response.setStatus(incident.getStatus());
         response.setAssignedTechnicianId(incident.getAssignedTechnicianId());
@@ -58,6 +60,9 @@ public class IncidentResponse {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
     public IncidentPriority getPriority() { return priority; }
     public void setPriority(IncidentPriority priority) { this.priority = priority; }

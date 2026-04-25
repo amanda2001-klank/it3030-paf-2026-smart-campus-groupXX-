@@ -1,4 +1,5 @@
 import React from 'react';
+import AuthenticatedIncidentImage from './AuthenticatedIncidentImage';
 
 const EvidenceAttachments = ({ attachments = [] }) => {
   return (
@@ -13,8 +14,8 @@ const EvidenceAttachments = ({ attachments = [] }) => {
       <div className="grid grid-cols-3 gap-3">
         {attachments.map((file) => (
           <div key={file.id} className="group relative aspect-square overflow-hidden rounded-xl border border-gray-200">
-            <img 
-              src={file.url} 
+            <AuthenticatedIncidentImage 
+              url={file.path} 
               alt={file.name} 
               className="h-full w-full object-cover transition duration-300 group-hover:scale-110"
             />

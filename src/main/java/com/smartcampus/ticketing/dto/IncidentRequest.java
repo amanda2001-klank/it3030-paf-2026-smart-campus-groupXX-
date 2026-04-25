@@ -13,6 +13,9 @@ public class IncidentRequest {
     @NotBlank(message = "Description is required")
     private String description;
 
+    @NotBlank(message = "Category is required")
+    private String category;
+
     @NotNull(message = "Priority is required")
     private IncidentPriority priority;
 
@@ -25,6 +28,9 @@ public class IncidentRequest {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
     public IncidentPriority getPriority() { return priority; }
     public void setPriority(IncidentPriority priority) { this.priority = priority; }

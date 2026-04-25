@@ -34,6 +34,12 @@ const TechnicianTicketsPage = () => {
   };
 
   const handleSelectIncident = async (id) => {
+    // Show basic info from list first
+    const basicInfo = incidents.find(inc => inc.id === id);
+    if (basicInfo) {
+      setSelectedIncident(basicInfo);
+    }
+
     try {
       const res = await getIncidentById(id);
       setSelectedIncident(res.data);
@@ -134,7 +140,7 @@ const TechnicianTicketsPage = () => {
             <EvidenceAttachments 
               attachments={selectedIncident?.attachmentUrls?.map((url, index) => ({ 
                 id: index, 
-                url: `${API_BASE_URL}/api/ticketing/incidents/media/${url}`, 
+                path: url, 
                 name: `Attachment ${index + 1}` 
               }))} 
             />

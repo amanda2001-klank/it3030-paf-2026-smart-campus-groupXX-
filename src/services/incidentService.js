@@ -43,6 +43,12 @@ export const getTechnicians = () => {
   return apiClient.get('/api/ticketing/incidents/technicians');
 };
 
+export const previewIncidentMedia = (url) => {
+  return apiClient.get(`/api/ticketing/incidents/media/${url}`, {
+    responseType: 'blob'
+  });
+};
+
 // For stats in Admin Dashboard
 export const getIncidentStats = async () => {
   const res = await getIncidents();

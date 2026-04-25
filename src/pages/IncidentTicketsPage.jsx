@@ -58,12 +58,17 @@ const IncidentTicketsPage = () => {
   };
 
   const handleSelectIncident = async (id) => {
-    // Set basic info immediately from the list to improve perceived performance
+    // 1. Find the basic info from our current list to show immediately
     const basicInfo = incidents.find(inc => inc.id === id);
-    if (basicInfo) setSelectedIncident(basicInfo);
+    if (basicInfo) {
+      setSelectedIncident(basicInfo);
+    }
     
     try {
+      // 2. Fetch full details (including latest discussion) from server
       const res = await getIncidentById(id);
+      
+      // 3. Update with full details
       setSelectedIncident(res.data);
     } catch (error) {
       console.error('Failed to fetch incident details:', error);
@@ -318,7 +323,7 @@ const IncidentTicketsPage = () => {
           <EvidenceAttachments 
             attachments={selectedIncident?.attachmentUrls?.map((url, index) => ({ 
               id: index, 
-              url: `${API_BASE_URL}/api/ticketing/incidents/media/${url}`, 
+              path: url, 
               name: `Attachment ${index + 1}` 
             }))} 
           />

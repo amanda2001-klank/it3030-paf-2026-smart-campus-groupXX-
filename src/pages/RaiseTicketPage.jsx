@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createIncident } from '../services/incidentService';
 import Toast from '../components/common/Toast';
@@ -12,8 +12,16 @@ const RaiseTicketPage = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    category: 'TECHNICAL',
     priority: 'MEDIUM'
   });
+
+  // Cleanup object URLs to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      previews.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [previews]);
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -31,12 +39,18 @@ const RaiseTicketPage = () => {
 
   const removeFile = (index) => {
     const newFiles = [...files];
+    const removedFilePreview = previews[index];
+    
     newFiles.splice(index, 1);
     setFiles(newFiles);
 
     const newPreviews = [...previews];
     newPreviews.splice(index, 1);
     setPreviews(newPreviews);
+    
+    if (removedFilePreview) {
+      URL.revokeObjectURL(removedFilePreview);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -46,6 +60,7 @@ const RaiseTicketPage = () => {
     const data = new FormData();
     data.append('title', formData.title);
     data.append('description', formData.description);
+    data.append('category', formData.category);
     data.append('priority', formData.priority);
     files.forEach(file => data.append('files', file));
 
@@ -81,18 +96,33 @@ const RaiseTicketPage = () => {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-bold text-slate-700">Priority</label>
-            <select
-              value={formData.priority}
-              onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-              className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm focus:border-blue-400 focus:outline-none"
-            >
-              <option value="LOW">Low - General inquiry or minor issue</option>
-              <option value="MEDIUM">Medium - Functional issue with workaround</option>
-              <option value="HIGH">High - Critical issue affecting operations</option>
-              <option value="CRITICAL">Critical - Immediate attention required</option>
-            </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-slate-700">Category</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm focus:border-blue-400 focus:outline-none"
+              >
+                <option value="TECHNICAL">Technical</option>
+                <option value="FACILITIES">Facilities</option>
+                <option value="EQUIPMENT">Equipment</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-slate-700">Priority</label>
+              <select
+                value={formData.priority}
+                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm focus:border-blue-400 focus:outline-none"
+              >
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="CRITICAL">Critical</option>
+              </select>
+            </div>
           </div>
 
           <div>
@@ -118,7 +148,7 @@ const RaiseTicketPage = () => {
                     onClick={() => removeFile(index)}
                     className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white"
                   >
-                    \u2715
+                    &#x2715;
                   </button>
                 </div>
               ))}

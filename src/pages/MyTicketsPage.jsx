@@ -61,7 +61,10 @@ const MyTicketsPage = () => {
                 <div className="text-xs font-bold text-slate-400">{ticket.ticketNumber}</div>
                 <div>
                   <h3 className="font-bold text-slate-800">{ticket.title}</h3>
-                  <p className="text-xs text-slate-500">Reported on {new Date(ticket.createdAt).toLocaleDateString()}</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{ticket.category}</span>
+                    <span className="text-[10px] text-slate-400 font-medium">Reported on {new Date(ticket.createdAt).toLocaleDateString()}</span>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-4">

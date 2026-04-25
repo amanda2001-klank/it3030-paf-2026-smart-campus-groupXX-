@@ -38,6 +38,7 @@ public class IncidentServiceImpl implements IncidentService {
         incident.setTicketNumber("INC-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         incident.setTitle(request.getTitle());
         incident.setDescription(request.getDescription());
+        incident.setCategory(request.getCategory());
         incident.setPriority(request.getPriority());
         incident.setStatus(request.getStatus() != null ? request.getStatus() : IncidentStatus.OPEN);
         incident.setReportedById(reporterId);
@@ -92,6 +93,7 @@ public class IncidentServiceImpl implements IncidentService {
         
         if (request.getTitle() != null) incident.setTitle(request.getTitle());
         if (request.getDescription() != null) incident.setDescription(request.getDescription());
+        if (request.getCategory() != null) incident.setCategory(request.getCategory());
         if (request.getPriority() != null) incident.setPriority(request.getPriority());
         if (request.getStatus() != null) incident.setStatus(request.getStatus());
         if (request.getAssignedTechnicianId() != null) {
